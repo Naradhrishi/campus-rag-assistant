@@ -220,6 +220,7 @@ __marimo__/
 # RAG local DB - NEVER push, contains your personal doc vectors
 chroma_store/
 backend/chroma_store/
+**/*.bin
 **/chroma_store/
 
 # Env secrets
