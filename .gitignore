@@ -216,3 +216,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# RAG local DB - NEVER push, contains your personal doc vectors
+chroma_store/
+backend/chroma_store/
+**/chroma_store/
+
+# Env secrets
+.env
+backend/.env
