@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css"/> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <title>Campus RAG Assistant</title>
+  </head>
+  <body>
+    <header>
+      <button id="menu-toggle-btn" title="Toggle documents panel">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <p>Campus RAG Assistant</p>
+      <span id="header-spacer"></span>
+    </header>
+
+    <div id="sidebar-backdrop"></div>
+
+    <main>
+      <aside id="sidebar">
+        <div id="mode-toggle">
+          <button class="mode-btn active" data-mode="personal">
+            <i class="fa-solid fa-user"></i> My Documents
+          </button>
+          <button class="mode-btn" data-mode="university">
+            <i class="fa-solid fa-graduation-cap"></i> University Regulations
+          </button>
+        </div>
+
+        <div id="file-upload-container">
+          <input type="file" id="upload-icon" style="display: none;" accept=".pdf,.docx,.txt"/>
+          <label for="upload-icon" id="file-upload-icon-container" title="Upload File">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+          </label>
+          <p id="file-upload-message">Click to Upload <br>(PDF, Docx, Txt)</p>
+          <p id="upload-status"></p>
+        </div>
+
+        <p id="university-mode-note">
+          <i class="fa-solid fa-circle-info"></i>
+          These are official regulation documents preloaded by the administrator. You can't upload here — just ask questions.
+        </p>
+
+        <section id="uploaded-file-view-section">
+          <h4 id="file-list-heading">Your Documents</h4>
+          <ul id="file-list"></ul>
+          <p id="empty-file-hint">No documents yet. Upload one to get started.</p>
+        </section>
+      </aside>
+
+      <section id="request-response-container">
+        <section id="request-response-section">
+          <div class="message bot">Hi! Upload a document and ask anything from it, or switch to <strong>University Regulations</strong> to ask about official policies.</div>
+        </section>
+        <footer>
+          <input type="text" id="query-input" placeholder="Ask your knowledge base..." />
+          <button id="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+        </footer>
+      </section>
+    </main>
+    <script src="script.js"></script>
+  </body>
+</html>
