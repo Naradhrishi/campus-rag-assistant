@@ -10,6 +10,7 @@ from fastapi import FastAPI, UploadFile, File, Form, Query, HTTPException
 from pydantic import BaseModel
 from groq import Groq
 import rag_engine as rag
+from contextlib import asynccontextmanager
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
@@ -18,7 +19,24 @@ if not GROQ_API_KEY:
     raise RuntimeError("GROQ_API_KEY is not set.")
 
 groq_client = Groq(api_key=GROQ_API_KEY)
-app = FastAPI(title="Campus RAG Assistant")
+
+@asynccontextmanager
+async def lifespan(app):
+    print("=== Lifespan: checking university docs ===")
+    try:
+        col = rag.get_collection(rag.UNIVERSITY_COLLECTION)
+        count = col.count()
+        print(f"University collection count: {count}")
+        if count == 0:
+            print("Empty -> ingesting from university_docs/")
+            import ingest_university_docs
+            ingest_university_docs.ingest()
+            print(f"After ingest count: {col.count()}")
+    except Exception as e:
+        print(f"Lifespan ingest failed: {e}")
+    yield
+
+app = FastAPI(title="Campus RAG Assistant", lifespan=lifespan)
 
 # app.add_middleware(
 #     CORSMiddleware,
