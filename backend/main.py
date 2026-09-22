@@ -48,20 +48,19 @@ def _collection_for(mode: str) -> str:
 def health():
     return {"status": "ok"}
 
-# --- FIX 1 ---
+
 @app.get("/files")
-def files(
-    mode: str = Query(default="personal"),
-    session_id: str | None = Query(default=None)
-):
+def files(mode: str = Query(default="personal"), session_id: str | None = Query(default=None)):
     collection_name = _collection_for(mode)
     if mode == "personal":
         if not session_id:
-            return {"files": []} # FIX 3: don't throw 400 on first load
+            return {"files": []}
         names = rag.list_files(collection_name, session_id=session_id)
     else:
+        # university - no session filter, show only preloaded regs
         names = rag.list_files(collection_name)
     return {"files": names}
+
 
 @app.post("/upload")
 async def upload(
@@ -117,9 +116,58 @@ def ask(req: AskRequest):
         raise HTTPException(status_code=502, detail=f"Groq API error: {e}")
     return {"answer": answer, "sources": sources}
 
+# This is delete all endpoint
 @app.delete("/session/{session_id}")
 def clear_session(session_id: str):
     rag.delete_session_documents(session_id)
     return {"message": "Session documents cleared."}
+
+
+# This is single file delete endpoint
+@app.delete("/files")
+def delete_files(
+    mode: str = Query(default="personal"),
+    session_id: str | None = Query(default=None),
+    filename: str | None = Query(default=None)
+):
+    try:
+        collection_name = _collection_for(mode)
+        collection = rag.get_collection(collection_name)
+
+        if mode == "personal":
+            if not session_id:
+                raise HTTPException(status_code=400, detail="session_id required")
+            if filename:
+                # delete single file for this session
+                collection.delete(where={"$and": [{"filename": {"$eq": filename}}, {"session_id": {"$eq": session_id}}]})
+                # fallback for older chroma where $and not supported
+                # collection.delete(where={"filename": filename}) then filter, but above is safer
+                # simpler fallback:
+                # all_docs = collection.get(where={"session_id": session_id})
+                # ids = [id for id, meta in zip(all_docs['ids'], all_docs['metadatas']) if meta.get('filename')==filename]
+                # if ids: collection.delete(ids=ids)
+            else:
+                # delete all for this session
+                collection.delete(where={"session_id": session_id})
+        else:
+            # university mode - admin
+            if filename:
+                collection.delete(where={"filename": filename})
+            else:
+                # delete all university docs
+                # get all ids
+                data = collection.get()
+                if data['ids']:
+                    collection.delete(ids=data['ids'])
+
+        return {"message": f"Deleted {filename if filename else 'all files'}", "files": []}
+
+    except Exception as e:
+        print(f"Delete error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 app.frontend("/", directory="dist", fallback="index.html")
